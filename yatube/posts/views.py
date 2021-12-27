@@ -2,7 +2,6 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
 from .models import Post, Group
-from django.views.generic.edit import CreateView
 from .forms import PostForm
 from django.shortcuts import redirect
 
