@@ -1,0 +1,212 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-5.3.5, py-1.8.1, pluggy-0.13.1 -- /home/npro/Dev/hw03_forms/venv/bin/python3
+django: settings: yatube.settings (from ini)
+rootdir: /home/npro/Dev/hw03_forms, inifile: pytest.ini, testpaths: tests/
+plugins: pythonpath-0.7.3, Faker-10.0.0, django-3.8.0
+collecting ... collected 20 items
+
+tests/test_paginator.py::TestGroupPaginatorView::test_group_paginator_view_get PASSED [  5%]
+tests/test_paginator.py::TestGroupPaginatorView::test_group_paginator_not_in_context_view PASSED [ 10%]
+tests/test_paginator.py::TestGroupPaginatorView::test_index_paginator_not_in_view_context PASSED [ 15%]
+tests/test_paginator.py::TestGroupPaginatorView::test_index_paginator_view PASSED [ 20%]
+tests/test_paginator.py::TestGroupPaginatorView::test_profile_paginator_view PASSED [ 25%]
+tests/test_about.py::TestTemplateView::test_about_author_tech PASSED     [ 30%]
+tests/test_auth_urls.py::TestAuthUrls::test_auth_urls PASSED             [ 35%]
+tests/test_create.py::TestCreateView::test_create_view_get PASSED        [ 40%]
+tests/test_create.py::TestCreateView::test_create_view_post FAILED       [ 45%]
+tests/test_homework.py::TestPost::test_post_create PASSED                [ 50%]
+tests/test_homework.py::TestGroup::test_group_create PASSED              [ 55%]
+tests/test_homework.py::TestGroupView::test_group_view FAILED            [ 60%]
+tests/test_post.py::TestPostView::test_post_view_get PASSED              [ 65%]
+tests/test_post.py::TestPostEditView::test_post_edit_view_get PASSED     [ 70%]
+tests/test_post.py::TestPostEditView::test_post_edit_view_author_get PASSED [ 75%]
+tests/test_post.py::TestPostEditView::test_post_edit_view_author_post PASSED [ 80%]
+tests/test_profile.py::TestProfileView::test_profile_view_get FAILED     [ 85%]
+tests/test_homework.py::TestPost::test_post_model PASSED                 [ 90%]
+tests/test_homework.py::TestPost::test_post_admin PASSED                 [ 95%]
+tests/test_homework.py::TestGroup::test_group_model PASSED               [100%]
+
+=================================== FAILURES ===================================
+_____________________ TestCreateView.test_create_view_post _____________________
+
+self = <tests.test_create.TestCreateView object at 0x7f3d6196f280>
+user_client = <django.test.client.Client object at 0x7f3d6199bb20>
+user = <User: TestUser>, group = <Group: Тестовая группа 1>
+
+    @pytest.mark.django_db(transaction=True)
+    def test_create_view_post(self, user_client, user, group):
+        text = 'Проверка нового поста!'
+        try:
+            response = user_client.get('/create')
+        except Exception as e:
+            assert False, f'''Страница `/create` работает неправильно. Ошибка: `{e}`'''
+        url = '/create/' if response.status_code in (301, 302) else '/create'
+    
+        response = user_client.post(url, data={'text': text, 'group': group.id})
+    
+        assert response.status_code in (301, 302), (
+            'Проверьте, что со страницы `/create/` после создания поста, '
+            f'перенаправляете на страницу профиля автора `/profile/{user.username}`'
+        )
+        post = Post.objects.filter(author=user, text=text, group=group).first()
+        assert post is not None, 'Проверьте, что вы сохранили новый пост при отправки формы на странице `/create/`'
+        assert response.url == f'/profile/{user.username}/', (
+            f'Проверьте, что перенаправляете на страницу профиля автора `/profile/{user.username}`'
+        )
+    
+        text = 'Проверка нового поста 2!'
+        response = user_client.post(url, data={'text': text})
+        assert response.status_code in (301, 302), (
+            'Проверьте, что со страницы `/create/` после создания поста, '
+            f'перенаправляете на страницу профиля автора `/profile/{user.username}`'
+        )
+        post = Post.objects.filter(author=user, text=text, group__isnull=True).first()
+        assert post is not None, 'Проверьте, что вы сохранили новый пост при отправке формы на странице `/create/`'
+        assert response.url == f'/profile/{user.username}/', (
+            f'Проверьте, что перенаправляете на страницу профиля автора `/profile/{user.username}`'
+        )
+    
+>       response = user_client.post(url)
+
+tests/test_create.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.8/site-packages/django/test/client.py:543: in post
+    response = super().post(path, data=data, content_type=content_type, secure=secure, **extra)
+venv/lib/python3.8/site-packages/django/test/client.py:356: in post
+    return self.generic('POST', path, post_data, content_type,
+venv/lib/python3.8/site-packages/django/test/client.py:422: in generic
+    return self.request(**r)
+venv/lib/python3.8/site-packages/django/test/client.py:503: in request
+    raise exc_value
+venv/lib/python3.8/site-packages/django/core/handlers/exception.py:34: in inner
+    response = get_response(request)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <django.test.client.ClientHandler object at 0x7f3d6199baf0>
+request = <WSGIRequest: POST '/create/'>
+
+    def _get_response(self, request):
+        """
+        Resolve and call the view, then apply view, exception, and
+        template_response middleware. This method is everything that happens
+        inside the request/response middleware.
+        """
+        response = None
+    
+        if hasattr(request, 'urlconf'):
+            urlconf = request.urlconf
+            set_urlconf(urlconf)
+            resolver = get_resolver(urlconf)
+        else:
+            resolver = get_resolver()
+    
+        resolver_match = resolver.resolve(request.path_info)
+        callback, callback_args, callback_kwargs = resolver_match
+        request.resolver_match = resolver_match
+    
+        # Apply view middleware
+        for middleware_method in self._view_middleware:
+            response = middleware_method(request, callback, callback_args, callback_kwargs)
+            if response:
+                break
+    
+        if response is None:
+            wrapped_callback = self.make_view_atomic(callback)
+            try:
+                response = wrapped_callback(request, *callback_args, **callback_kwargs)
+            except Exception as e:
+                response = self.process_exception_by_middleware(e, request)
+    
+        # Complain if the view returned None (a common error).
+        if response is None:
+            if isinstance(callback, types.FunctionType):    # FBV
+                view_name = callback.__name__
+            else:                                           # CBV
+                view_name = callback.__class__.__name__ + '.__call__'
+    
+>           raise ValueError(
+                "The view %s.%s didn't return an HttpResponse object. It "
+                "returned None instead." % (callback.__module__, view_name)
+            )
+E           ValueError: The view posts.views.post_create didn't return an HttpResponse object. It returned None instead.
+
+venv/lib/python3.8/site-packages/django/core/handlers/base.py:124: ValueError
+------------------------------ Captured log call -------------------------------
+ERROR    django.request:log.py:222 Internal Server Error: /create/
+Traceback (most recent call last):
+  File "/home/npro/Dev/hw03_forms/venv/lib/python3.8/site-packages/django/core/handlers/exception.py", line 34, in inner
+    response = get_response(request)
+  File "/home/npro/Dev/hw03_forms/venv/lib/python3.8/site-packages/django/core/handlers/base.py", line 124, in _get_response
+    raise ValueError(
+ValueError: The view posts.views.post_create didn't return an HttpResponse object. It returned None instead.
+________________________ TestGroupView.test_group_view _________________________
+
+self = <tests.test_homework.TestGroupView object at 0x7f3d61a87a30>
+client = <django.test.client.Client object at 0x7f3d621844c0>
+post_with_group = <Post: Тестовый пост 2>
+
+    @pytest.mark.django_db(transaction=True)
+    def test_group_view(self, client, post_with_group):
+        try:
+            response = client.get(f'/group/{post_with_group.group.slug}')
+        except Exception as e:
+            assert False, f'''Страница `/group/<slug>/` работает неправильно. Ошибка: `{e}`'''
+        if response.status_code in (301, 302):
+            response = client.get(f'/group/{post_with_group.group.slug}/')
+        if response.status_code == 404:
+            assert False, 'Страница `/group/<slug>/` не найдена, проверьте этот адрес в *urls.py*'
+    
+        if response.status_code != 200:
+            assert False, 'Страница `/group/<slug>/` работает неправильно.'
+        group = post_with_group.group
+        html = response.content.decode()
+    
+        templates_list = ['group_list.html', 'posts/group_list.html']
+        html_template = select_template(templates_list).template.source
+    
+        assert search_refind(r'{%\s*for\s+.+in.*%}', html_template), (
+            'Отредактируйте HTML-шаблон, используйте тег цикла'
+        )
+        assert search_refind(r'{%\s*endfor\s*%}', html_template), (
+            'Отредактируйте HTML-шаблон, не найден тег закрытия цикла'
+        )
+    
+>       assert re.search(
+            r'<\s*h1\s*>\s*' + group.title + r'\s*<\s*\/h1\s*>',
+            html
+        ), (
+            'Отредактируйте HTML-шаблон, не найден заголовок группы '
+            '`{% block header %}{{ название_группы }}{% endblock %}`'
+        )
+E       AssertionError: Отредактируйте HTML-шаблон, не найден заголовок группы `{% block header %}{{ название_группы }}{% endblock %}`
+E       assert None
+E        +  where None = <function search at 0x7f3d64751550>((('<\\s*h1\\s*>\\s*' + 'Тестовая группа 1') + '\\s*<\\s*\\/h1\\s*>'), '<!DOCTYPE html> \n<html lang="ru">          \n  <head>\n    \n    <meta charset="utf-8">\n    <meta name="viewport" c...enter py-3">\n      <p>© 2021 Copyright <span style="color:red">Ya</span>tube</p>  \n    </footer>\n  </body>\n</html>')
+E        +    where <function search at 0x7f3d64751550> = re.search
+E        +    and   'Тестовая группа 1' = <Group: Тестовая группа 1>.title
+
+tests/test_homework.py:197: AssertionError
+____________________ TestProfileView.test_profile_view_get _____________________
+
+self = <tests.test_profile.TestProfileView object at 0x7f3d6199bd60>
+client = <django.test.client.Client object at 0x7f3d620670a0>
+post_with_group = <Post: Тестовый пост 2>
+
+    @pytest.mark.django_db(transaction=True)
+    def test_profile_view_get(self, client, post_with_group):
+        try:
+            response = client.get(f'/profile/{post_with_group.author.username}')
+        except Exception as e:
+            assert False, f'''Страница `/profile/<username>/` работает неправильно. Ошибка: `{e}`'''
+        if response.status_code in (301, 302):
+            response = client.get(f'/profile/{post_with_group.author.username}/')
+        assert response.status_code != 404, (
+            'Страница `/profile/<username>/` не найдена, проверьте этот адрес в *urls.py*'
+        )
+    
+        profile_context = get_field_from_context(response.context, get_user_model())
+>       assert profile_context is not None, 'Проверьте, что передали автора в контекст страницы `/profile/<username>/`'
+E       AssertionError: Проверьте, что передали автора в контекст страницы `/profile/<username>/`
+E       assert None is not None
+
+tests/test_profile.py:23: AssertionError
+========================= 3 failed, 17 passed in 2.28s =========================
